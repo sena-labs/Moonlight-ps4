@@ -16,6 +16,7 @@
 
 #ifdef __ORBIS__
 #include "orbis/video_out_c.h"
+#include "orbis/app_exit.h"
 #include <orbis/libkernel.h>
 #include <orbis/UserService.h>
 #define CONFIG_DIR CONFIG_DIR_PS4
@@ -23,7 +24,7 @@
 #define CONFIG_DIR "."
 #endif
 
-#define VERSION_STR "1.1.0"
+#define VERSION_STR "1.1.1"
 
 static void read_line_file(const char *path, char *out, size_t outlen) {
     out[0] = '\0';
@@ -130,6 +131,8 @@ int main(void) {
     int rc = stream_run(&cfg, CONFIG_DIR);
     LOGI("<<< stream_run => %d", rc);
 
-    hang_forever(rc == 0 ? "OK Stream closed" : "FAIL");
+    /* stream_run only returns on fatal errors: leave cleanly instead of
+     * hanging (the shell kill of a hung app shows CE-34878-0). */
+    app_exit_to_dashboard();
     return 0;
 }

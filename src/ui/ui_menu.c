@@ -4,11 +4,22 @@
 #include "../input/input_pad.h"
 #include "../video/video.h"
 #include "../gamestream/gs_errors.h"
+#ifdef __ORBIS__
+#include "../orbis/app_exit.h"
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <time.h>
+#include <stdint.h>
+
+static uint64_t now_us(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000000ull + ts.tv_nsec / 1000;
+}
 #include <unistd.h>
 
 #ifdef __ORBIS__
@@ -607,6 +618,8 @@ int ui_menu_run(app_config_t *cfg, gs_server_t *server, const char *config_dir) 
     int no_pad = 0;
     int idle_frames = 0;
     int grace = 45; /* ~0.7 s without accepting launch */
+    uint64_t exit_combo_us = 0;
+    const unsigned exit_combo = MENU_BTN_OPTIONS | MENU_BTN_TOUCHPAD;
 
     while (st.result == -1000) {
         unsigned pr = 0, held = 0;
@@ -630,6 +643,19 @@ int ui_menu_run(app_config_t *cfg, gs_server_t *server, const char *config_dir) 
                     MENU_BTN_TRIANGLE);
             if (held & (MENU_BTN_OPTIONS | MENU_BTN_CROSS | MENU_BTN_CIRCLE))
                 input_menu_absorb();
+        }
+
+        /* OPTIONS + TOUCHPAD held ~1 s: clean exit to the dashboard. */
+        if ((held & exit_combo) == exit_combo) {
+            uint64_t now = now_us();
+            if (!exit_combo_us)
+                exit_combo_us = now;
+            else if (now - exit_combo_us > 1000000ull) {
+                LOGI("ui: exit combo → dashboard");
+                app_exit_to_dashboard();
+            }
+        } else {
+            exit_combo_us = 0;
         }
 
         if (pr) {

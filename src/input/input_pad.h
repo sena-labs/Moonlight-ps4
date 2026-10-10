@@ -36,6 +36,7 @@ void input_menu_wait_release(unsigned mask, int timeout_ms);
 #define MENU_BTN_L1       0x0100u
 #define MENU_BTN_R1       0x0200u
 #define MENU_BTN_OPTIONS  0x0400u
+#define MENU_BTN_TOUCHPAD 0x0800u
 
 // pressed: edges this frame (with D-pad auto-repeat); held: state.
 // Returns 0 if pad was read, <0 if no controller.

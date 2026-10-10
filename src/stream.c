@@ -10,6 +10,9 @@
 #include "video/video.h"
 #include "input/input_pad.h"
 #include "ui/ui_menu.h"
+#ifdef __ORBIS__
+#include "orbis/app_exit.h"
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -289,6 +292,17 @@ start_ok:
     LiStopConnection();
     /* No gs_quit_app: leave the game on Sunshine for resume → "paused". */
     LOGN("Stream paused");
+
+    /* User asked to quit (not a disconnect): leave the app cleanly.
+     * Returning to the menu loop leaves worker threads torn down only
+     * partially and the shell kill then crashes with CE-34878-0; going
+     * straight to the dashboard via LoadExec avoids the dirty teardown. */
+    if (input_should_quit()) {
+        input_shutdown();
+        LOGI("stream_play: user quit → exit to dashboard");
+        app_exit_to_dashboard();
+    }
+
     LOGI("stream_play done OK → return to menu");
     return 0;
 }

@@ -122,7 +122,7 @@ void input_menu_wait_release(unsigned mask, int timeout_ms) {
         if (scePadReadState(s_pad, &pad) == 0) {
             unsigned h = pad_to_menu_mask(&pad);
             if (pad.buttons & ORBIS_PAD_BUTTON_TOUCH_PAD)
-                h |= MENU_BTN_OPTIONS; /* treat touchpad as "held" */
+                h |= MENU_BTN_TOUCHPAD;
             if ((h & mask) == 0) {
                 s_menu_prev = h;
                 return;
